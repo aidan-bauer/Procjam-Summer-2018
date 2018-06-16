@@ -146,8 +146,9 @@ MonoBehaviour:
   width: 400
   height: 250
   steps: 5
+  randFillPercent: 50
   seed: 
-  generateFromSeed: 0
+  generateFromSeed: 1
 --- !u!4 &286960917
 Transform:
   m_ObjectHideFlags: 0

@@ -7,6 +7,8 @@ public class WorldBuilder : MonoBehaviour {
     public int width = 250;
     public int height = 250;
     public int steps = 5;
+    [Range(0,100)]
+    public int randFillPercent;
 
     public string seed;
     public bool generateFromSeed;
@@ -29,15 +31,23 @@ public class WorldBuilder : MonoBehaviour {
 
     void generate()
     {
+        if (generateFromSeed)
+            seed = Time.time.ToString();
+
+        System.Random pseudoRand = new System.Random(seed.GetHashCode());
+
         mapValues = new int[width, height];
 
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                mapValues[x, y] = coinFlip();
+                //mapValues[x, y] = coinFlip();
+                mapValues[x, y] = (pseudoRand.Next(0, 100) < randFillPercent) ? 1 : 0;
             }
         }
+
+
 
         for (int i = 0; i < steps; i++)
         {
