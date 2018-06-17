@@ -4,41 +4,57 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour {
 
+    public KeyCode moveLeft = KeyCode.A;
+    public KeyCode moveRight = KeyCode.D;
+    public KeyCode jump = KeyCode.W;
+
     public Vector3 vel;
     public float moveSpeed = 5;
     public float jumpForce = 5f;
     public float fallMultiplier = 3f;
-    private float jumpForceStorage = 0f; //storage variable for jumping
     Rigidbody rigid;
 
     float xMove = 0;
-    bool jump;
+    RaycastHit hit;
 
-	// Use this for initialization
-	void Awake () {
+    // Use this for initialization
+    void Awake () {
         rigid = GetComponent<Rigidbody>();
 
         rigid.velocity = Vector3.zero;
-
-        //jumpForceStorage = jumpForce;
 	}
 	
 	// Update is called once per frame
-	void Update () {
-        rigid.AddForce(Vector3.right * Input.GetAxis("Horizontal") * moveSpeed);
+	void Update ()
+    {
+        vel = rigid.velocity;
 
-        if (Input.GetKeyDown(KeyCode.W))
+        if (Input.GetKey(moveRight))
         {
-            RaycastHit hit;
-            if (Physics.Raycast(transform.position, Vector3.down, out hit))
+            xMove = 1;
+        } else if (Input.GetKey(moveLeft))
+        {
+            xMove = -1;
+        } else
+        {
+            xMove = 0;
+        }
+
+        vel.x = xMove * moveSpeed;
+
+        if (Physics.Raycast(transform.position, Vector3.down, out hit))
+        {
+            if (hit.collider.CompareTag("Environment"))
             {
-                if (hit.collider.CompareTag("Environment"))
+
+                if (Input.GetKeyDown(KeyCode.W))
                 {
-                    rigid.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-                    //rigid.velocity = Vector3.up * jumpForce;
+                    vel.y = jumpForce;
                 }
             }
         }
+
+        rigid.velocity = vel;
 	}
 
     //code to make the player fall faster

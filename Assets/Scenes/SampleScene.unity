@@ -143,9 +143,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e9f6672deb244543925786ec5e8de37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 400
+  width: 250
   height: 250
-  steps: 5
+  steps: 6
   randFillPercent: 50
   seed: 
   generateFromSeed: 1
