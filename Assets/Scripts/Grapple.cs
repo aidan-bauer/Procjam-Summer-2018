@@ -7,7 +7,7 @@ public class Grapple : MonoBehaviour {
     public Transform holder;    //the player or NPC who's holding the grappling hook
     public float speed;
     private bool inAir = false;
-    private HingeJoint hingeJoint;
+    private HingeJoint grabHinge;
     private Rigidbody rigid;
 
 	// Use this for initialization
@@ -29,8 +29,8 @@ public class Grapple : MonoBehaviour {
 
     void unhook()
     {
-        hingeJoint.connectedBody = null;
-        Destroy(hingeJoint);
+        grabHinge.connectedBody = null;
+        Destroy(grabHinge);
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -39,10 +39,12 @@ public class Grapple : MonoBehaviour {
         {
             if (inAir)
             {
-                rigid.velocity = Vector3.zero;
-                gameObject.AddComponent<HingeJoint>();
-                hingeJoint.connectedBody = collision.rigidbody;
                 inAir = false;
+                rigid.velocity = Vector3.zero;
+                grabHinge = gameObject.AddComponent<HingeJoint>();
+                grabHinge.connectedBody = collision.rigidbody;
+
+                //code for moving player towards grapple
             }
         }
     }

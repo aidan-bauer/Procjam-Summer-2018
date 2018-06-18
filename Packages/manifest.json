@@ -1,4 +1,7 @@
 {
-	"dependencies": {
-	}
+  "dependencies": {
+    "com.unity.postprocessing": "2.0.7-preview",
+    "com.unity.purchasing": "exclude",
+    "com.unity.ads": "exclude"
+  }
 }
