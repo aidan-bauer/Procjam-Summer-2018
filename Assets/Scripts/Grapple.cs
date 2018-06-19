@@ -7,33 +7,35 @@ public class Grapple : MonoBehaviour {
     public Transform holder;    //the player or NPC who's holding the grappling hook
     public float speed;
     private bool inAir = false;
-    private HingeJoint grabHinge;
     private Rigidbody rigid;
+    private HingeJoint grabHinge;
+    private LineRenderer lineRend;
 
 	// Use this for initialization
 	void Awake () {
-        //hingeJoint = GetComponent<HingeJoint>();
         rigid = GetComponent<Rigidbody>();
+        lineRend = GetComponent<LineRenderer>();
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-		
-	}
+        lineRend.SetPosition(0, transform.position);
+        lineRend.SetPosition(lineRend.positionCount - 1, holder.position);
+    }
 
-    void launchGrapple(Vector3 launchAngle)
+    public void launchGrapple(Vector3 launchAngle)
     {
         rigid.velocity = launchAngle * speed;
         inAir = true;
     }
 
-    void unhook()
+    public void breakGrapple()
     {
         grabHinge.connectedBody = null;
         Destroy(grabHinge);
     }
 
-    private void OnCollisionEnter(Collision collision)
+    void OnCollisionEnter(Collision collision)
     {
         if (collision.transform.CompareTag("Environment"))
         {

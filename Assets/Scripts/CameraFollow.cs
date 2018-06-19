@@ -6,6 +6,8 @@ public class CameraFollow : MonoBehaviour {
 
     public Transform target;
     public Vector3 offset;
+
+    [Range(0.05f, 0.5f)]
     public float smoothSpeed = 0.125f;
 
     public bool lookAtTarget = true;
