@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour {
 
+    public bool canMove = true;
+
     public KeyCode moveLeft = KeyCode.A;
     public KeyCode moveRight = KeyCode.D;
     public KeyCode jump = KeyCode.W;
@@ -27,34 +29,39 @@ public class PlayerMovement : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
-        vel = rigid.velocity;
+        if (canMove)
+        {
+            vel = rigid.velocity;
 
-        if (Input.GetKey(moveRight))
-        {
-            xMove = 1;
-        } else if (Input.GetKey(moveLeft))
-        {
-            xMove = -1;
-        } else
-        {
-            xMove = 0;
-        }
-
-        vel.x = xMove * moveSpeed;
-
-        if (Physics.Raycast(transform.position, Vector3.down, out hit))
-        {
-            if (hit.collider.CompareTag("Environment"))
+            if (Input.GetKey(moveRight))
             {
+                xMove = 1;
+            }
+            else if (Input.GetKey(moveLeft))
+            {
+                xMove = -1;
+            }
+            else
+            {
+                xMove = 0;
+            }
 
-                if (Input.GetKeyDown(KeyCode.W))
+            vel.x = xMove * moveSpeed;
+
+            if (Physics.Raycast(transform.position, Vector3.down, out hit))
+            {
+                if (hit.collider.CompareTag("Environment"))
                 {
-                    vel.y = jumpForce;
+
+                    if (Input.GetKeyDown(KeyCode.W))
+                    {
+                        vel.y = jumpForce;
+                    }
                 }
             }
-        }
 
-        rigid.velocity = vel;
+            rigid.velocity = vel;
+        }
 	}
 
     //code to make the player fall faster
