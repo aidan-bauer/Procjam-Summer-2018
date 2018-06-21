@@ -47,12 +47,13 @@ public class WorldBuilder : MonoBehaviour {
             }
         }
 
-
-
         for (int i = 0; i < steps; i++)
         {
             smooth();
         }
+
+        MeshGenerator meshGen = GetComponent<MeshGenerator>();
+        meshGen.OnGenerateMesh(mapValues, 1f);
     }
 
     int coinFlip()
@@ -113,17 +114,18 @@ public class WorldBuilder : MonoBehaviour {
 
     private void OnDrawGizmos()
     {
-        if (mapValues != null)
+        /*if (mapValues != null)
         {
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
                 {
-                    Gizmos.color = (mapValues[x, y] == 1) ? Color.black : Color.white;
+                    //Gizmos.color = (mapValues[x, y] == 1) ? Color.black : Color.white;
+                    Gizmos.color = Color.gray;
                     Vector3 pos = new Vector3(-width/2 + x, -height/2 + y);
-                    Gizmos.DrawCube(pos, Vector3.one);
+                    Gizmos.DrawCube(pos, Vector3.one * 0.5f);
                 }
             }
-        }
+        }*/
     }
 }

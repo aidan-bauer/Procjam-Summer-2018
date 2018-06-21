@@ -77,22 +77,20 @@ public class Grapple : MonoBehaviour {
         holderRigid.isKinematic = true;
         playerMovement.canMove = false;
         Vector3 dist = holder.position - transform.position;
-        //holderRigid.velocity = Vector3.ClampMagnitude(dist, 1) * 5f;
 
         while (dist.magnitude > 0.25f)
         {
             //Debug.Log(dist.magnitude);
-            dist = holder.position - transform.position;
-            holder.position = Vector3.MoveTowards(holder.position, transform.position, 1f);
-
-            if (dist.magnitude < 0.6f)
+            if (dist.magnitude < 1.0f)
             {
                 //Debug.Log("reached hook");
                 yield return null;
             }
-            yield return new WaitForSeconds(0.05f);
-        }
 
-        //yield return null;
+            dist = holder.position - transform.position;
+            holder.position = Vector3.MoveTowards(holder.position, transform.position, 0.8f);
+            
+            yield return new WaitForSeconds(Time.deltaTime / 2.0f);
+        }
     }
 }

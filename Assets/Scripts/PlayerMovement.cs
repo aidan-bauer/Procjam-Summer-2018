@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour {
 
     public bool canMove = true;
+    public bool canJump;
 
     public KeyCode moveLeft = KeyCode.A;
     public KeyCode moveRight = KeyCode.D;
@@ -52,11 +53,14 @@ public class PlayerMovement : MonoBehaviour {
             {
                 if (hit.collider.CompareTag("Environment"))
                 {
-
+                    canJump = true;
                     if (Input.GetKeyDown(KeyCode.W))
                     {
                         vel.y = jumpForce;
                     }
+                } else
+                {
+                    canJump = false;
                 }
             }
 

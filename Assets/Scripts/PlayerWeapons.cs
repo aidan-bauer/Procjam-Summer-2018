@@ -17,6 +17,7 @@ public class PlayerWeapons : MonoBehaviour {
 
     void Update()
     {
+        //grapple code
         if (Input.GetMouseButtonDown(1))
         {
             //only allow one grappling hook to exist at once
