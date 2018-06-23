@@ -32,7 +32,7 @@ public class WorldBuilder : MonoBehaviour {
     void generate()
     {
         if (generateFromSeed)
-            seed = Time.time.ToString();
+            seed = System.DateTime.Now.ToString();
 
         System.Random pseudoRand = new System.Random(seed.GetHashCode());
 
@@ -42,7 +42,6 @@ public class WorldBuilder : MonoBehaviour {
         {
             for (int y = 0; y < height; y++)
             {
-                //mapValues[x, y] = coinFlip();
                 mapValues[x, y] = (pseudoRand.Next(0, 100) < randFillPercent) ? 1 : 0;
             }
         }
@@ -52,16 +51,38 @@ public class WorldBuilder : MonoBehaviour {
             smooth();
         }
 
+        int borderWidth = 10;
+        int[,] borderMap = new int[width + borderWidth * 2, height + borderWidth * 2];
+
+        //make sure the outer edges of the map are closed off
+        for (int x = 0; x < borderMap.GetLength(0); x++)
+        {
+            for (int y = 0; y < borderMap.GetLength(1); y++)
+            {
+                if (x >= borderWidth && x < width + borderWidth && y >= borderWidth && y < height + borderWidth) {
+                    borderMap[x, y] = mapValues[x - borderWidth, y - borderWidth];
+                }
+                else
+                {
+                    borderMap[x, y] = 1;
+                }
+            }
+        }
+        /*for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                //not everything is the same because of weird stuff going on in MeshGenerator
+                //pls make note to fix it
+                if (x == 0 || y == 1 || x == (width - 2) || y == (height - 1))
+                {
+                    mapValues[x, y] = 1;
+                }
+            }
+        }*/
+
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
-        meshGen.OnGenerateMesh(mapValues, 1f);
-    }
-
-    int coinFlip()
-    {
-        float coin = Random.Range(0f, 1f);
-        int headsOrTails = (coin < 0.5) ? 1 : 0;
-
-        return headsOrTails;
+        meshGen.OnGenerateMesh(borderMap, 1f);
     }
 
     //smooth out the random noise
@@ -120,8 +141,8 @@ public class WorldBuilder : MonoBehaviour {
             {
                 for (int y = 0; y < height; y++)
                 {
-                    //Gizmos.color = (mapValues[x, y] == 1) ? Color.black : Color.white;
-                    Gizmos.color = Color.gray;
+                    Gizmos.color = (mapValues[x, y] == 1) ? Color.black : Color.white;
+                    //Gizmos.color = Color.gray;
                     Vector3 pos = new Vector3(-width/2 + x, -height/2 + y);
                     Gizmos.DrawCube(pos, Vector3.one * 0.5f);
                 }

@@ -6,14 +6,81 @@ public class MeshGenerator : MonoBehaviour {
 
     public SquareGrid squareGrid;
 
+    List<Vector3> vertices;
+    List<Vector2> uv;
+    List<Vector3> normals;
+    List<int> triangles;
+
+    Mesh mesh;
+    MeshCollider meshCollider;
+
     public void OnGenerateMesh(int[,] map, float squareSize)
     {
+        //create the list of nodes
         squareGrid = new SquareGrid(map, squareSize);
+
+        vertices = new List<Vector3>();
+        uv = new List<Vector2>();
+        normals = new List<Vector3>();
+        triangles = new List<int>();
+
+        mesh = GetComponent<MeshFilter>().mesh = new Mesh();
+        mesh.name = "Procedural Cave";
+        //surface = GetComponent<NavMeshSurface>();
+
+        for (int x = 0; x < squareGrid.squares.GetLength(0); x++)
+        {
+            for (int y = 0; y < squareGrid.squares.GetLength(1); y++)
+            {
+                FillSquare(squareGrid.squares[x, y]);
+            }
+        }
+
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = triangles.ToArray();
+        mesh.RecalculateNormals();
+
+        meshCollider = GetComponent<MeshCollider>();
+        meshCollider.sharedMesh = mesh;
+    }
+
+    void FillSquare(Square square)
+    {
+        switch (square.config)
+        {
+            case 0:
+                break;
+            case 1:
+                AssignVertices(square.topLeft, square.topRight, square.bottomRight, square.bottomLeft);
+                CreateTriangle(square.topLeft, square.topRight, square.bottomRight);
+                CreateTriangle(square.topLeft, square.bottomRight, square.bottomLeft);
+                break;
+        }
+    }
+
+    //create vertices and assign them in order in the mesh
+    void AssignVertices(params Node[] nodes)
+    {
+        for (int i = 0; i < nodes.Length; i++)
+        {
+            if (nodes[i].vertexIndex == -1)
+            {
+                nodes[i].vertexIndex = vertices.Count;
+                vertices.Add(nodes[i].pos);
+            }
+        }
+    }
+
+    void CreateTriangle(Node a, Node b, Node c)
+    {
+        triangles.Add(a.vertexIndex);
+        triangles.Add(b.vertexIndex);
+        triangles.Add(c.vertexIndex);
     }
 
     private void OnDrawGizmos()
     {
-        if (squareGrid != null)
+        /*if (squareGrid != null)
         {
             for (int x = 0; x < squareGrid.squares.GetLength(0); x++)
             {
@@ -32,7 +99,7 @@ public class MeshGenerator : MonoBehaviour {
                     Gizmos.DrawCube(squareGrid.squares[x, y].bottomLeft.pos, Vector3.one * 0.25f);
                 }
             }
-        }
+        }*/
     }
 }
 
@@ -74,6 +141,7 @@ public class SquareGrid
 public class Square
 {
     public Node topLeft, topRight, bottomRight, bottomLeft;
+    public int config;
 
     public Square(Node _topLeft, Node _topRight, Node _bottomRight, Node _bottomLeft)
     {
@@ -81,6 +149,11 @@ public class Square
         topRight = _topRight;
         bottomRight = _bottomRight;
         bottomLeft = _bottomLeft;
+
+        if (topLeft.active)
+            config = 1;
+        else
+            config = 0;
     }
 }
 
@@ -88,7 +161,7 @@ public class Node
 {
     public Vector3 pos;
     public bool active;
-    public int vertexInt = -1;
+    public int vertexIndex = -1;
 
     public Node(Vector3 _pos, bool _active)
     {
