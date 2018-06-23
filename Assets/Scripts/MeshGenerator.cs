@@ -5,17 +5,27 @@ using UnityEngine;
 public class MeshGenerator : MonoBehaviour {
 
     public SquareGrid squareGrid;
+    public MeshFilter walls;
+    public float wallHeight = 5;
 
     List<Vector3> vertices;
     List<Vector2> uv;
     List<Vector3> normals;
     List<int> triangles;
 
+    Dictionary<int, List<Triangle>> triangleDictionary = new Dictionary<int, List<Triangle>>();
+    List<List<int>> outlines = new List<List<int>>();
+    HashSet<int> checkedVertices = new HashSet<int>();
+
     Mesh mesh;
     MeshCollider meshCollider;
 
     public void OnGenerateMesh(int[,] map, float squareSize)
     {
+        triangleDictionary.Clear();
+        outlines.Clear();
+        checkedVertices.Clear();
+
         //create the list of nodes
         squareGrid = new SquareGrid(map, squareSize);
 
@@ -42,6 +52,45 @@ public class MeshGenerator : MonoBehaviour {
 
         meshCollider = GetComponent<MeshCollider>();
         meshCollider.sharedMesh = mesh;
+
+        createWallMesh();
+    }
+
+    void createWallMesh()
+    {
+        calculateMeshOutlines();
+
+        List<Vector3> wallVerts = new List<Vector3>();
+        List<int> wallTriangles = new List<int>();
+        Mesh wallMesh = new Mesh();
+
+        foreach(List<int> outline in outlines)
+        {
+            for (int i = 0; i < outline.Count-1; i++)
+            {
+                int startIndex = wallVerts.Count;
+
+                //generate the four vertices
+                wallVerts.Add(vertices[outline[i]]);        //left vertex
+                wallVerts.Add(vertices[outline[i + 1]]);    //right vertex
+                wallVerts.Add(vertices[outline[i]] - (Vector3.forward * wallHeight));        //bottom left vertex
+                wallVerts.Add(vertices[outline[i + 1]] - (Vector3.forward * wallHeight));    //bottom right vertex
+
+                //triangle 1
+                wallTriangles.Add(startIndex + 0);      //topleft
+                wallTriangles.Add(startIndex + 2);
+                wallTriangles.Add(startIndex + 3);
+
+                //triangle 2
+                wallTriangles.Add(startIndex + 3);
+                wallTriangles.Add(startIndex + 1);
+                wallTriangles.Add(startIndex + 0);
+            }
+        }
+
+        wallMesh.vertices = wallVerts.ToArray();
+        wallMesh.triangles = wallTriangles.ToArray();
+        walls.sharedMesh = wallMesh;
     }
 
     void FillSquare(Square square)
@@ -76,6 +125,103 @@ public class MeshGenerator : MonoBehaviour {
         triangles.Add(a.vertexIndex);
         triangles.Add(b.vertexIndex);
         triangles.Add(c.vertexIndex);
+
+        Triangle triangle = new Triangle(a.vertexIndex, b.vertexIndex, c.vertexIndex);
+        AddTriangleToDictionary(triangle.vertexIndexA, triangle);
+        AddTriangleToDictionary(triangle.vertexIndexB, triangle);
+        AddTriangleToDictionary(triangle.vertexIndexC, triangle);
+    }
+
+    //add to array or override an existing triangle
+    void AddTriangleToDictionary(int vertexIndexKey, Triangle triangle)
+    {
+        if (triangleDictionary.ContainsKey(vertexIndexKey))
+        {
+            triangleDictionary[vertexIndexKey].Add(triangle);
+        }
+        else
+        {
+            List<Triangle> triangleList = new List<Triangle>();
+            triangleList.Add(triangle);
+            triangleDictionary.Add(vertexIndexKey, triangleList);
+        }
+    }
+
+    //go through every vertex in the map, see if it an outline vertex
+    //if it is, follow that outline until it meets up with itself again
+    void calculateMeshOutlines()
+    {
+        for (int vertexIndex = 0; vertexIndex < vertices.Count; vertexIndex++)
+        {
+            if (!checkedVertices.Contains(vertexIndex))
+            {
+                int newOutlineVertex = getConnectedOutlineVertex(vertexIndex);
+
+                if (newOutlineVertex != -1)
+                {
+                    checkedVertices.Add(newOutlineVertex);
+
+                    List<int> newOutline = new List<int> ();
+                    newOutline.Add(vertexIndex);
+                    outlines.Add(newOutline);
+                    followOutline(newOutlineVertex, outlines.Count - 1);
+                    outlines[outlines.Count - 1].Add(vertexIndex);
+                }
+            }
+        }
+    }
+
+
+    void followOutline(int vertexIndex, int outlineIndex)
+    {
+        outlines[outlineIndex].Add(vertexIndex);
+        checkedVertices.Add(vertexIndex);
+        int nextVertexIndex = getConnectedOutlineVertex(vertexIndex);
+
+        if (nextVertexIndex != -1)
+        {
+            followOutline(nextVertexIndex, outlineIndex);
+        }
+    }
+
+    //if given a vertex, find another vertex that forms an outline edge
+    int getConnectedOutlineVertex(int vertexIndex)
+    {
+        List<Triangle> trianglesWithVertexIndex = triangleDictionary[vertexIndex];
+
+        for (int i =0; i < trianglesWithVertexIndex.Count; i++)
+        {
+            Triangle triangle = trianglesWithVertexIndex[i];
+
+            for (int j = 0; j < 3; j++)
+            {
+                int vertexB = triangle[j];
+
+                if (vertexB != vertexIndex && !checkedVertices.Contains(vertexIndex))
+                    if (isOutlineEdge(vertexIndex, vertexB))
+                        return vertexB;
+            }
+        }
+
+        return -1;
+    }
+
+    //if two vertexes share only one triangle then they are an edge
+    bool isOutlineEdge(int vertexA, int vertexB)
+    {
+        List<Triangle> trianglesWithVertexA = triangleDictionary[vertexA];
+        int sharedTriangleCount = 0;
+
+        for (int i =0; i < trianglesWithVertexA.Count; i++)
+        {
+            if (trianglesWithVertexA[i].Contains(vertexB)) {
+                sharedTriangleCount++;
+                if (sharedTriangleCount > 1)
+                    break;
+            }
+        }
+
+        return sharedTriangleCount == 1;
     }
 
     private void OnDrawGizmos()
@@ -100,6 +246,40 @@ public class MeshGenerator : MonoBehaviour {
                 }
             }
         }*/
+    }
+}
+
+struct Triangle
+{
+    public int vertexIndexA;
+    public int vertexIndexB;
+    public int vertexIndexC;
+    int[] vertices;
+
+    public Triangle(int a, int b, int c)
+    {
+        vertexIndexA = a;
+        vertexIndexB = b;
+        vertexIndexC = c;
+
+        vertices = new int[3];
+        vertices[0] = a;
+        vertices[1] = b;
+        vertices[2] = c;
+    }
+
+    public int this[int i]
+    {
+        get
+        {
+            return vertices[i];
+        }
+    }
+
+
+    public bool Contains(int vertexIndex)
+    {
+        return vertexIndex == vertexIndexA || vertexIndex == vertexIndexB || vertexIndex == vertexIndexC;
     }
 }
 
