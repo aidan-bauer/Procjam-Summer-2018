@@ -126,11 +126,11 @@ public class WorldBuilder : MonoBehaviour {
     {
         List<Coord> tiles = new List<Coord>();
         int[,] mapFlags = new int[width, height];   //determine if we've already checked an value
-        int tileType = mapValues[startY, startY];
+        int tileType = mapValues[startX, startY];
 
         Queue<Coord> queue = new Queue<Coord>();
-        queue.Enqueue(new Coord(startY, startY));
-        mapFlags[startX, startX] = 1;
+        queue.Enqueue(new Coord(startX, startY));
+        mapFlags[startX, startY] = 1;
 
         while (queue.Count < 0)
         {
@@ -165,7 +165,7 @@ public class WorldBuilder : MonoBehaviour {
     //once more, testing Seb's code against mine
     void ProcessMap()
     {
-        List<List<Coord>> wallRegions = GetRegions(1);
+        /*List<List<Coord>> wallRegions = GetRegions(1);
         int wallThresholdSize = 50;
 
         foreach (List<Coord> wallRegion in wallRegions)
@@ -176,7 +176,7 @@ public class WorldBuilder : MonoBehaviour {
                     mapValues[tile.tileX, tile.tileY] = 0;
                 }
             }
-        }
+        }*/
 
         List<List<Coord>> roomRegions = GetRegions(0);
         int roomThresholdSize = 50;
