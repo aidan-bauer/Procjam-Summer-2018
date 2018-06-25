@@ -7,6 +7,7 @@ public class WorldBuilder : MonoBehaviour {
     public int width = 250;
     public int height = 250;
     public int steps = 5;
+    public int minRoomSize = 100;
     [Range(0,100)]
     public int randFillPercent;
 
@@ -15,6 +16,8 @@ public class WorldBuilder : MonoBehaviour {
 
     //1 = solid, 0 = empty
     int[,] mapValues;
+
+    bool drawOnce = false;
 
     // Use this for initialization
     void Awake () {
@@ -51,8 +54,7 @@ public class WorldBuilder : MonoBehaviour {
             smooth();
         }
 
-        //processRegions();
-        ProcessMap();
+        processRegions();
 
         int borderWidth = 10;
         int[,] borderMap = new int[width + borderWidth * 2, height + borderWidth * 2];
@@ -79,11 +81,14 @@ public class WorldBuilder : MonoBehaviour {
     void processRegions()
     {
         List<List<Coord>> rooms = getRegions(0);
-        //Debug.Log(rooms.Count);
+        rooms.Sort(delegate (List<Coord> regionOne, List<Coord> regionTwo)
+        {
+            return regionOne.Count.CompareTo(regionTwo.Count);
+        });
 
         foreach (List<Coord> room in rooms)
         {
-            if (room.Count < 20)
+            if (room.Count < minRoomSize)
             {
                 foreach (Coord tile in room)
                 {
@@ -132,7 +137,7 @@ public class WorldBuilder : MonoBehaviour {
         queue.Enqueue(new Coord(startX, startY));
         mapFlags[startX, startY] = 1;
 
-        while (queue.Count < 0)
+        while (queue.Count > 0)
         {
             Coord tile = queue.Dequeue();
             tiles.Add(tile);
@@ -158,92 +163,6 @@ public class WorldBuilder : MonoBehaviour {
     }
 
     bool isInMapRange(int x, int y)
-    {
-        return x >= 0 && x < width && y >= 0 && y < height;
-    }
-
-    //once more, testing Seb's code against mine
-    void ProcessMap()
-    {
-        /*List<List<Coord>> wallRegions = GetRegions(1);
-        int wallThresholdSize = 50;
-
-        foreach (List<Coord> wallRegion in wallRegions)
-        {
-            if (wallRegion.Count < wallThresholdSize) {
-                foreach (Coord tile in wallRegion)
-                {
-                    mapValues[tile.tileX, tile.tileY] = 0;
-                }
-            }
-        }*/
-
-        List<List<Coord>> roomRegions = GetRegions(0);
-        int roomThresholdSize = 50;
-
-        foreach (List<Coord> roomRegion in roomRegions)
-        {
-            if (roomRegion.Count < roomThresholdSize) {
-                foreach (Coord tile in roomRegion)
-                {
-                    mapValues[tile.tileX, tile.tileY] = 1;
-                }
-            }
-        }
-    }
-
-    List<List<Coord>> GetRegions(int tileType)
-    {
-        List<List<Coord>> regions = new List<List<Coord>>();
-        int[,] mapFlags = new int[width, height];
-
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                if (mapFlags[x, y] == 0 && mapValues[x, y] == tileType) {
-                    List<Coord> newRegion = GetRegionTiles(x, y);
-                    regions.Add(newRegion);
-
-                    foreach (Coord tile in newRegion)
-                    {
-                        mapFlags[tile.tileX, tile.tileY] = 1;
-                    }
-                }
-            }
-        }
-
-        return regions;
-    }
-
-    List<Coord> GetRegionTiles(int startX, int startY)
-    {
-        List<Coord> tiles = new List<Coord> ();
-        int[,] mapFlags = new int[width, height];
-        int tileType = mapValues[startX, startY];
-
-        Queue<Coord> queue = new Queue<Coord> ();
-        queue.Enqueue(new Coord(startX, startY));
-        mapFlags[startX, startY] = 1;
-
-        while (queue.Count > 0) {
-            Coord tile = queue.Dequeue();
-            tiles.Add(tile);
-
-            for (int x = tile.tileX - 1; x <= tile.tileX + 1; x++) {
-                for (int y = tile.tileY - 1; y <= tile.tileY + 1; y++) {
-                    if (IsInMapRange(x, y) && (y == tile.tileY || x == tile.tileX)) {
-                        if (mapFlags[x, y] == 0 && mapValues[x, y] == tileType) {
-                            mapFlags[x, y] = 1;
-                            queue.Enqueue(new Coord(x, y));
-                        }
-                    }
-                }
-            }
-        }
-
-        return tiles;
-    }
-
-    bool IsInMapRange(int x, int y)
     {
         return x >= 0 && x < width && y >= 0 && y < height;
     }
@@ -310,9 +229,9 @@ public class WorldBuilder : MonoBehaviour {
 
     private void OnDrawGizmos()
     {
-        /*if (mapValues != null)
+        if (mapValues != null)
         {
-            for (int x = 0; x < width; x++)
+            /*for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
                 {
@@ -321,7 +240,31 @@ public class WorldBuilder : MonoBehaviour {
                     Vector3 pos = new Vector3(-width/2 + x, -height/2 + y);
                     Gizmos.DrawCube(pos, Vector3.one * 0.5f);
                 }
+            }*/
+            
+            List<List<Coord>> rooms = getRegions(0);
+            rooms.Sort(delegate(List<Coord> regionOne, List<Coord> regionTwo)
+            {
+                return regionOne.Count.CompareTo(regionTwo.Count);
+            });
+
+            for (int i = 0; i < rooms.Count; i++)
+            {
+                if (i == 0)
+                    Gizmos.color = Color.green;
+                else if (i == rooms.Count - 1)
+                    Gizmos.color = Color.red;
+                else
+                    Gizmos.color = Color.yellow;
+                //Gizmos.color = Random.ColorHSV();
+
+                foreach (Coord tile in rooms[i])
+                {
+                    Vector3 pos = new Vector3(-width / 2 + tile.tileX + 0.5f, -height / 2 + tile.tileY + 0.5f);
+                    Gizmos.DrawCube(pos, Vector3.one * 0.5f);
+                }
             }
-        }*/
+            
+        }
     }
 }

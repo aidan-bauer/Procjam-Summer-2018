@@ -148,7 +148,8 @@ MonoBehaviour:
   width: 250
   height: 250
   steps: 11
-  randFillPercent: 50
+  minRoomSize: 100
+  randFillPercent: 48
   seed: 
   generateFromSeed: 1
 --- !u!4 &286960917
@@ -404,7 +405,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 663983775}
   m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 15}
+  m_LocalPosition: {x: 0, y: 0, z: 5}
   m_LocalScale: {x: 50, y: 1, z: 50}
   m_Children: []
   m_Father: {fileID: 0}
@@ -488,7 +489,7 @@ GameObject:
   - component: {fileID: 1602280383}
   m_Layer: 0
   m_Name: walls
-  m_TagString: Untagged
+  m_TagString: Environment
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -48,12 +48,12 @@ public class MeshGenerator : MonoBehaviour {
             }
         }
 
+        meshCollider = GetComponent<MeshCollider>();
+        meshCollider.sharedMesh = mesh;
+
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.RecalculateNormals();
-
-        meshCollider = GetComponent<MeshCollider>();
-        meshCollider.sharedMesh = mesh;
 
         CreateWallMesh();
     }
@@ -69,15 +69,15 @@ public class MeshGenerator : MonoBehaviour {
 
         foreach(List<int> outline in outlines)
         {
-            for (int i = 0; i < outline.Count-1; i++)
+            for (int i = 0; i < outline.Count - 1; i++)
             {
                 int startIndex = wallVerts.Count;
 
                 //generate the four vertices
                 wallVerts.Add(vertices[outline[i]]);        //left vertex
                 wallVerts.Add(vertices[outline[i + 1]]);    //right vertex
-                wallVerts.Add(vertices[outline[i]] - Vector3.back * wallHeight);        //bottom left vertex
-                wallVerts.Add(vertices[outline[i + 1]] - Vector3.back * wallHeight);    //bottom right vertex
+                wallVerts.Add(vertices[outline[i]] - Vector3.forward * wallHeight);        //bottom left vertex
+                wallVerts.Add(vertices[outline[i + 1]] - Vector3.forward * wallHeight);    //bottom right vertex
 
                 //triangle 1
                 wallTriangles.Add(startIndex + 0);      //topleft
@@ -94,6 +94,7 @@ public class MeshGenerator : MonoBehaviour {
         wallMesh.vertices = wallVerts.ToArray();
         wallMesh.triangles = wallTriangles.ToArray();
         walls.sharedMesh = wallCollider.sharedMesh = wallMesh;
+        walls.transform.position -= Vector3.back * wallHeight;
     }
 
     void FillSquare(Square square)
@@ -166,7 +167,7 @@ public class MeshGenerator : MonoBehaviour {
 
                 if (newOutlineVertex != -1)
                 {
-                    checkedVertices.Add(newOutlineVertex);
+                    checkedVertices.Add(vertexIndex);
 
                     List<int> newOutline = new List<int> ();
                     newOutline.Add(vertexIndex);
@@ -196,7 +197,7 @@ public class MeshGenerator : MonoBehaviour {
     {
         List<Triangle> trianglesWithVertexIndex = triangleDictionary[vertexIndex];
 
-        for (int i =0; i < trianglesWithVertexIndex.Count; i++)
+        for (int i = 0; i < trianglesWithVertexIndex.Count; i++)
         {
             Triangle triangle = trianglesWithVertexIndex[i];
 
@@ -219,10 +220,11 @@ public class MeshGenerator : MonoBehaviour {
         List<Triangle> trianglesWithVertexA = triangleDictionary[vertexA];
         int sharedTriangleCount = 0;
 
-        for (int i =0; i < trianglesWithVertexA.Count; i++)
+        for (int i = 0; i < trianglesWithVertexA.Count; i++)
         {
             if (trianglesWithVertexA[i].Contains(vertexB)) {
                 sharedTriangleCount++;
+
                 if (sharedTriangleCount > 1)
                     break;
             }
@@ -240,7 +242,7 @@ public class MeshGenerator : MonoBehaviour {
         List<Vector3> wallVertices = new List<Vector3>();
         List<int> wallTriangles = new List<int>();
         Mesh wallMesh = new Mesh();
-        wallMesh.name = "Cave Walls";
+        wallMesh.name = "Seb's Cave Walls";
         //float wallHeight = 5;
 
         foreach (List<int> outline in outlines)
