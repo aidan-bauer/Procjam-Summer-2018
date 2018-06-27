@@ -148,8 +148,8 @@ MonoBehaviour:
   width: 250
   height: 250
   steps: 11
-  minRoomSize: 100
-  randFillPercent: 48
+  minRoomSize: 150
+  randFillPercent: 50
   seed: 
   generateFromSeed: 1
 --- !u!4 &286960917

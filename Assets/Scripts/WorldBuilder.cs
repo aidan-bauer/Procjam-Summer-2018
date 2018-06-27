@@ -16,6 +16,7 @@ public class WorldBuilder : MonoBehaviour {
 
     //1 = solid, 0 = empty
     int[,] mapValues;
+    List<List<Coord>> rooms = new List<List<Coord>>();
 
     bool drawOnce = false;
 
@@ -80,24 +81,30 @@ public class WorldBuilder : MonoBehaviour {
 
     void processRegions()
     {
-        List<List<Coord>> rooms = getRegions(0);
+        rooms = getRegions(0);
+
+        for (int i = 0; i < rooms.Count; i++)
+        {
+            //Debug.Log(room.Count);
+            if (rooms[i].Count < minRoomSize)
+            {
+                foreach (Coord tile in rooms[i])
+                {
+                    mapValues[tile.tileX, tile.tileY] = 1;
+                }
+
+                Debug.Log("room closed");
+                //rooms.RemoveAt(i);
+                //rooms.Remove(room);
+            }
+        }
+
+        //reload rooms after removing all the small ones and sort by size
+        rooms = getRegions(0);
         rooms.Sort(delegate (List<Coord> regionOne, List<Coord> regionTwo)
         {
             return regionOne.Count.CompareTo(regionTwo.Count);
         });
-
-        foreach (List<Coord> room in rooms)
-        {
-            if (room.Count < minRoomSize)
-            {
-                foreach (Coord tile in room)
-                {
-                    mapValues[tile.tileX, tile.tileY] = 1;
-                }
-                Debug.Log("room closed");
-                //rooms.Remove(room);
-            }
-        }
     }
 
     List<List<Coord>> getRegions(int tileType)
@@ -167,6 +174,36 @@ public class WorldBuilder : MonoBehaviour {
         return x >= 0 && x < width && y >= 0 && y < height;
     }
 
+    //assemble the objects in the game world
+    void spawnPlayer()
+    {
+        List<Coord> playerRoom = rooms[3];
+        List<Coord> playerSpawnPlaces = new List<Coord>();
+
+        foreach (Coord tile in playerRoom)
+        {
+            int[,] neighborTiles = getSurroundingTiles(tile.tileX, tile.tileY);
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    //if this tile has no ground beneath it and no walls on either side, add it for consideration
+                    if (neighborTiles[1, 2] == 1 &&
+                        neighborTiles[0, 1] == 0 &&
+                        neighborTiles[2, 1] == 0 &&
+                        neighborTiles[1, 0] == 0)
+                    {
+                        playerSpawnPlaces.Add(tile);
+                    }
+                }
+            }
+        }
+
+        Coord placeSpawnLoc = playerSpawnPlaces[Random.Range(0, playerSpawnPlaces.Count)];
+
+        //TODO: instantiate player here
+    }
+
     //smooth out the random noise
     void smooth()
     {
@@ -215,6 +252,25 @@ public class WorldBuilder : MonoBehaviour {
         return changedValue;
     }
 
+    int[,] getSurroundingTiles(int x, int y)
+    {
+        //[0, 0] [1, 0] [2, 0]
+        //[0, 1] [1, 1] [2, 1]
+        //[0, 2] [1, 2] [2, 2]
+
+        int[,] surroundingTiles = new int[3, 3];
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                surroundingTiles[i, j] = mapValues[x + i, y + j];
+            }
+        }
+
+        return surroundingTiles;
+    }
+
     struct Coord
     {
         public int tileX;
@@ -256,10 +312,33 @@ public class WorldBuilder : MonoBehaviour {
                     Gizmos.color = Color.red;
                 else
                     Gizmos.color = Color.yellow;
+
                 //Gizmos.color = Random.ColorHSV();
 
                 foreach (Coord tile in rooms[i])
                 {
+                    if (i == 0)
+                    {
+                        int[,] neighborTiles = getSurroundingTiles(tile.tileX, tile.tileY);
+                        for (int k = 0; k < 3; k++)
+                        {
+                            for (int j = 0; j < 3; j++)
+                            {
+                                //if this tile has no ground beneath it and no walls on either side, add it for consideration
+                                if (neighborTiles[1, 2] == 1 &&
+                                    neighborTiles[0, 1] == 0 &&
+                                    neighborTiles[2, 1] == 0 &&
+                                    neighborTiles[1, 0] == 0)
+                                {
+                                    Gizmos.color = Color.blue;
+                                }
+                                else
+                                {
+                                    Gizmos.color = Color.green;
+                                }
+                            }
+                        }
+                    }
                     Vector3 pos = new Vector3(-width / 2 + tile.tileX + 0.5f, -height / 2 + tile.tileY + 0.5f);
                     Gizmos.DrawCube(pos, Vector3.one * 0.5f);
                 }
