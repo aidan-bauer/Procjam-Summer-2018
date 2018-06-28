@@ -149,9 +149,11 @@ MonoBehaviour:
   height: 250
   steps: 11
   minRoomSize: 150
-  randFillPercent: 50
+  randFillPercent: 49
   seed: 
   generateFromSeed: 1
+  player: {fileID: 1859684169795522, guid: cd4ac7c14cb37a049a5f8f49601b2c7a, type: 2}
+  fungi: {fileID: 1964391304068868, guid: 36a8f508df11c22448a9978f451c8a3a, type: 2}
 --- !u!4 &286960917
 Transform:
   m_ObjectHideFlags: 0
@@ -261,6 +263,7 @@ GameObject:
   - component: {fileID: 519420032}
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
+  - component: {fileID: 519420030}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -275,6 +278,21 @@ AudioListener:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_Enabled: 1
+--- !u!114 &519420030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d42ac2ae4a45dbf4a9dd51962c8d3ea3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 0}
+  offset: {x: 0, y: 0.5, z: -10}
+  smoothSpeed: 0.125
+  lookAtTarget: 1
 --- !u!20 &519420031
 Camera:
   m_ObjectHideFlags: 0
@@ -294,7 +312,7 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 1
+  orthographic: 0
   orthographic size: 130
   m_Depth: -1
   m_CullingMask:

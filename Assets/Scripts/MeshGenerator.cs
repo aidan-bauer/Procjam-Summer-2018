@@ -94,7 +94,7 @@ public class MeshGenerator : MonoBehaviour {
         wallMesh.vertices = wallVerts.ToArray();
         wallMesh.triangles = wallTriangles.ToArray();
         walls.sharedMesh = wallCollider.sharedMesh = wallMesh;
-        walls.transform.position -= Vector3.back * wallHeight;
+        walls.transform.position = Vector3.forward * wallHeight;
     }
 
     void FillSquare(Square square)
@@ -107,10 +107,6 @@ public class MeshGenerator : MonoBehaviour {
                 AssignVertices(square.topLeft, square.topRight, square.bottomRight, square.bottomLeft);
                 createTriangle(square.topLeft, square.topRight, square.bottomRight);
                 createTriangle(square.topLeft, square.bottomRight, square.bottomLeft);
-                /*checkedVertices.Add(square.topLeft.vertexIndex);
-                checkedVertices.Add(square.topRight.vertexIndex);
-                checkedVertices.Add(square.bottomRight.vertexIndex);
-                checkedVertices.Add(square.bottomLeft.vertexIndex);*/
                 break;
         }
     }
@@ -266,7 +262,7 @@ public class MeshGenerator : MonoBehaviour {
         wallMesh.vertices = wallVertices.ToArray();
         wallMesh.triangles = wallTriangles.ToArray();
         walls.mesh = wallCollider.sharedMesh = wallMesh;
-        walls.transform.position -= Vector3.back * wallHeight;
+        walls.transform.position = Vector3.forward * wallHeight;
     }
 
     void CreateTriangle(Node a, Node b, Node c)
