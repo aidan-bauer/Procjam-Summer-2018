@@ -80,6 +80,7 @@ public class WorldBuilder : MonoBehaviour {
         meshGen.OnGenerateMesh(borderMap, 1f);
 
         spawnPlayer();
+        populateLights();
     }
 
     void processRegions()
@@ -194,10 +195,10 @@ public class WorldBuilder : MonoBehaviour {
                     if (neighborTiles[i, j] != -1)
                     {
                         //if this tile has no ground beneath it and no walls on either side, add it for consideration
-                        if (neighborTiles[1, 2] == 1 &&
+                        if (neighborTiles[1, 2] == 0 &&
                         neighborTiles[0, 1] == 0 &&
                         neighborTiles[2, 1] == 0 &&
-                        neighborTiles[1, 0] == 0)
+                        neighborTiles[1, 0] == 1)
                         {
                             playerSpawnPlaces.Add(tile);
                         }
@@ -212,6 +213,41 @@ public class WorldBuilder : MonoBehaviour {
             (-height / 2) + playerSpawnLoc.tileY, 2), 
             Quaternion.identity);
         Camera.main.GetComponent<CameraFollow>().target = playerInst.transform;
+    }
+
+    void populateLights()
+    {
+        List<Coord> lightSpawnPlaces = new List<Coord>();
+
+        foreach (List<Coord> room in rooms)
+        {
+            foreach (Coord tile in room)
+            {
+                int[,] neighborTiles = getSurroundingTiles(tile.tileX, tile.tileY);
+
+                for (int i = 0; i < 3; i++)
+                {
+                    for (int j = 0; j < 3; j++)
+                    {
+                        //check to make sure we have an actual value to check
+                        if (neighborTiles[i, j] != -1)
+                        {
+                            if (neighborTiles[1, 2] == 1)
+                            {
+                                lightSpawnPlaces.Add(tile);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < lightSpawnPlaces.Count; i += 25)
+        {
+            GameObject fungiInst = Instantiate(fungi, new Vector3((-width / 2) + lightSpawnPlaces[i].tileX,
+                (-height / 2) + lightSpawnPlaces[i].tileY + 0.5f, 2), Quaternion.identity);
+            //fungi.transform.position += Vector3.one * 0.5f;
+        }
     }
 
     //smooth out the random noise

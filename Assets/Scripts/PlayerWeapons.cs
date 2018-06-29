@@ -38,7 +38,9 @@ public class PlayerWeapons : MonoBehaviour {
             grappleInst.launchGrapple(Vector3.ClampMagnitude(dir, 1));
         }
 
-        if (grappleInst && Input.GetKeyDown(breakKey))
+        //allow player to break grapple at any time
+        if (grappleInst && (Input.GetKeyDown(breakKey) || Input.GetKeyDown(playerMovement.jump) 
+            || Input.GetKeyDown(playerMovement.moveLeft) || Input.GetKeyDown(playerMovement.moveRight)))
         {
             grappleInst.breakGrapple();
             Destroy(grappleInst.gameObject);

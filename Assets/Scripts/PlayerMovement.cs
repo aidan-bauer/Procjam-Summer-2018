@@ -49,7 +49,7 @@ public class PlayerMovement : MonoBehaviour {
 
             vel.x = xMove * moveSpeed;
 
-            if (Physics.Raycast(transform.position, Vector3.down, out hit))
+            if (Physics.Raycast(transform.position, Vector3.down, out hit, 1f))
             {
                 if (hit.collider.CompareTag("Environment"))
                 {
@@ -62,6 +62,10 @@ public class PlayerMovement : MonoBehaviour {
                 {
                     canJump = false;
                 }
+            }
+            else
+            {
+                canJump = false;
             }
 
             rigid.velocity = vel;

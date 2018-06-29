@@ -188,7 +188,7 @@ public class MeshGenerator : MonoBehaviour {
         }
     }
 
-    //if given a vertex, find another vertex that forms an outline edge
+    //if given a vertex, find another vertex that forms an outline edge (two vertexes that only share one triangle)
     int getConnectedOutlineVertex(int vertexIndex)
     {
         List<Triangle> trianglesWithVertexIndex = triangleDictionary[vertexIndex];
