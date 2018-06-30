@@ -48,7 +48,7 @@ public class Grapple : MonoBehaviour {
 
     void OnCollisionEnter(Collision collision)
     {
-        if (collision.transform.CompareTag("Environment"))
+        if (collision.collider.CompareTag("Environment"))
         {
             if (inAir)
             {

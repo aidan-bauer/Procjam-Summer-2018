@@ -36,6 +36,11 @@ public class MeshGenerator : MonoBehaviour {
         normals = new List<Vector3>();
         triangles = new List<int>();
 
+        vertices.Clear();
+        uv.Clear();
+        normals.Clear();
+        triangles.Clear();
+
         mesh = GetComponent<MeshFilter>().mesh = new Mesh();
         mesh.name = "Procedural Cave";
         //surface = GetComponent<NavMeshSurface>();

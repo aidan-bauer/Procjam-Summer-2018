@@ -147,7 +147,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 200
   height: 300
-  steps: 11
+  steps: 7
   minRoomSize: 150
   randFillPercent: 49
   seed: 

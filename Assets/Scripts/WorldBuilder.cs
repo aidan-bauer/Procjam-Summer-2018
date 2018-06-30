@@ -244,7 +244,7 @@ public class WorldBuilder : MonoBehaviour {
 
         for (int i = 0; i < lightSpawnPlaces.Count; i += 25)
         {
-            GameObject fungiInst = Instantiate(fungi, new Vector3((-width / 2) + lightSpawnPlaces[i].tileX,
+            Instantiate(fungi, new Vector3((-width / 2) + lightSpawnPlaces[i].tileX,
                 (-height / 2) + lightSpawnPlaces[i].tileY + 0.5f, 2), Quaternion.identity);
             //fungi.transform.position += Vector3.one * 0.5f;
         }
