@@ -15,7 +15,8 @@ public class WorldBuilder : MonoBehaviour {
     public bool generateFromSeed;
 
     public GameObject player;
-    public GameObject fungi;
+    public GameObject fungus;
+    private List<GameObject> fungi = new List<GameObject>();
 
     //1 = solid, 0 = empty
     int[,] mapValues;
@@ -78,6 +79,14 @@ public class WorldBuilder : MonoBehaviour {
 
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
         meshGen.OnGenerateMesh(borderMap, 1f);
+
+        //delete all existing lights
+        for (int i = 0; i < fungi.Count; i++)
+        {
+            Destroy(fungi[i]);
+        }
+
+        fungi.Clear();
 
         spawnPlayer();
         populateLights();
@@ -244,9 +253,9 @@ public class WorldBuilder : MonoBehaviour {
 
         for (int i = 0; i < lightSpawnPlaces.Count; i += 25)
         {
-            Instantiate(fungi, new Vector3((-width / 2) + lightSpawnPlaces[i].tileX,
+            GameObject fungusInst = Instantiate(fungus, new Vector3((-width / 2) + lightSpawnPlaces[i].tileX,
                 (-height / 2) + lightSpawnPlaces[i].tileY + 0.5f, 2), Quaternion.identity);
-            //fungi.transform.position += Vector3.one * 0.5f;
+            fungi.Add(fungusInst);
         }
     }
 

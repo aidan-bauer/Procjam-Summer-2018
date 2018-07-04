@@ -147,13 +147,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 200
   height: 300
-  steps: 7
+  steps: 3
   minRoomSize: 150
-  randFillPercent: 49
+  randFillPercent: 52
   seed: 
   generateFromSeed: 1
   player: {fileID: 1859684169795522, guid: cd4ac7c14cb37a049a5f8f49601b2c7a, type: 2}
-  fungi: {fileID: 1964391304068868, guid: 36a8f508df11c22448a9978f451c8a3a, type: 2}
+  fungus: {fileID: 1964391304068868, guid: 36a8f508df11c22448a9978f451c8a3a, type: 2}
 --- !u!4 &286960917
 Transform:
   m_ObjectHideFlags: 0
