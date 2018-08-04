@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour {
+public class PlayerMovement : MonoBehaviour
+{
+    public bool isTwoDimensional = false;
 
     public bool canMove = true;
     public bool canJump;
@@ -16,15 +18,23 @@ public class PlayerMovement : MonoBehaviour {
     public float jumpForce = 5f;
     public float fallMultiplier = 3f;
     Rigidbody rigid;
+    Rigidbody2D rigidTwo;
 
     float xMove = 0;
     RaycastHit hit;
 
     // Use this for initialization
     void Awake () {
-        rigid = GetComponent<Rigidbody>();
-
-        rigid.velocity = Vector3.zero;
+        if (!isTwoDimensional)
+        {
+            rigid = GetComponent<Rigidbody>();
+            rigid.velocity = Vector3.zero;
+        }
+        else
+        {
+            rigidTwo = GetComponent<Rigidbody2D>();
+            rigidTwo.velocity = Vector3.zero;
+        }
 	}
 	
 	// Update is called once per frame
@@ -32,7 +42,10 @@ public class PlayerMovement : MonoBehaviour {
     {
         if (canMove)
         {
-            vel = rigid.velocity;
+            if (!isTwoDimensional)
+                vel = rigid.velocity;
+            else
+                vel = rigidTwo.velocity;
 
             if (Input.GetKey(moveRight))
             {
@@ -68,16 +81,29 @@ public class PlayerMovement : MonoBehaviour {
                 canJump = false;
             }
 
-            rigid.velocity = vel;
+            if (!isTwoDimensional)
+                rigid.velocity = vel;
+            else
+                rigidTwo.velocity = vel;
         }
 	}
 
     //code to make the player fall faster
     private void FixedUpdate()
     {
-        if (rigid.velocity.y < 0)
+        if (!isTwoDimensional)
         {
-            rigid.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime; //-1 to account for physics system's normal gravity
+            if (rigid.velocity.y < 0)
+            {
+                rigid.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime; //-1 to account for physics system's normal gravity
+            }
+        }
+        else
+        {
+            if (rigidTwo.velocity.y < 0)
+            {
+                rigidTwo.velocity += Vector2.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime; //-1 to account for physics system's normal gravity
+            }
         }
     }
 }

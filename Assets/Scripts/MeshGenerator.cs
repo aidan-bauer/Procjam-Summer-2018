@@ -3,7 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MeshGenerator : MonoBehaviour {
+public class MeshGenerator : MonoBehaviour
+{
+
+    public bool isTwoDimensional = false;
 
     public SquareGrid squareGrid;
     public MeshFilter walls;
@@ -53,14 +56,22 @@ public class MeshGenerator : MonoBehaviour {
             }
         }
 
-        meshCollider = GetComponent<MeshCollider>();
-        meshCollider.sharedMesh = mesh;
+        //Debug.Log(vertices.Count);
+
+        if (!isTwoDimensional)
+        {
+            meshCollider = GetComponent<MeshCollider>();
+            meshCollider.sharedMesh = mesh;
+        }
 
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.RecalculateNormals();
 
-        CreateWallMesh();
+        if (!isTwoDimensional)
+        {
+            CreateWallMesh();
+        }
     }
 
     void createWallMesh()
@@ -68,6 +79,7 @@ public class MeshGenerator : MonoBehaviour {
         calculateMeshOutlines();
 
         List<Vector3> wallVerts = new List<Vector3>();
+        List<Vector3> wallNormals = new List<Vector3>();
         List<int> wallTriangles = new List<int>();
         Mesh wallMesh = new Mesh();
         wallMesh.name = "Cave Walls";
@@ -93,10 +105,16 @@ public class MeshGenerator : MonoBehaviour {
                 wallTriangles.Add(startIndex + 3);
                 wallTriangles.Add(startIndex + 1);
                 wallTriangles.Add(startIndex + 0);
+
+                wallNormals.Add(Vector3.forward);
+                wallNormals.Add(Vector3.forward);
+                wallNormals.Add(Vector3.forward);
+                wallNormals.Add(Vector3.forward);
             }
         }
 
         wallMesh.vertices = wallVerts.ToArray();
+        //wallMesh.normals = wallNormals.ToArray();
         wallMesh.triangles = wallTriangles.ToArray();
         walls.sharedMesh = wallCollider.sharedMesh = wallMesh;
         walls.transform.position = Vector3.forward * wallHeight;
@@ -112,6 +130,11 @@ public class MeshGenerator : MonoBehaviour {
                 AssignVertices(square.topLeft, square.topRight, square.bottomRight, square.bottomLeft);
                 createTriangle(square.topLeft, square.topRight, square.bottomRight);
                 createTriangle(square.topLeft, square.bottomRight, square.bottomLeft);
+
+                /*checkedVertices.Add(square.topLeft.vertexIndex);
+                checkedVertices.Add(square.topRight.vertexIndex);
+                checkedVertices.Add(square.bottomRight.vertexIndex);
+                checkedVertices.Add(square.bottomLeft.vertexIndex);*/
                 break;
         }
     }
@@ -249,7 +272,7 @@ public class MeshGenerator : MonoBehaviour {
         foreach (List<int> outline in outlines)
         {
             for (int i = 0; i < outline.Count - 1; i++) {
-                int startIndex = wallVertices.Count;
+                int startIndex = wallVertices.Count;        //pick up where the last one left off
                 wallVertices.Add(vertices[outline[i]]); // left
                 wallVertices.Add(vertices[outline[i + 1]]); // right
                 wallVertices.Add(vertices[outline[i]] - Vector3.forward * wallHeight); // bottom left
@@ -266,6 +289,7 @@ public class MeshGenerator : MonoBehaviour {
         }
         wallMesh.vertices = wallVertices.ToArray();
         wallMesh.triangles = wallTriangles.ToArray();
+        wallMesh.RecalculateNormals();
         walls.mesh = wallCollider.sharedMesh = wallMesh;
         walls.transform.position = Vector3.forward * wallHeight;
     }
@@ -298,7 +322,6 @@ public class MeshGenerator : MonoBehaviour {
 
     void CalculateMeshOutlines()
     {
-
         for (int vertexIndex = 0; vertexIndex < vertices.Count; vertexIndex++) {
             if (!checkedVertices.Contains(vertexIndex))
             {
@@ -452,9 +475,9 @@ public class SquareGrid
 
         //assign the nodes to their correct squares
         squares = new Square[nodeCountX - 1, nodeCountY - 1];
-        for (int x = 0; x < squares.GetLength(0); x++)
+        for (int x = 0; x < nodeCountX - 1; x++)
         {
-            for (int y = 0; y < squares.GetLength(1); y++)
+            for (int y = 0; y < nodeCountY - 1; y++)
             {
                 squares[x, y] = new Square(nodes[x, y + 1], nodes[x + 1, y + 1], nodes[x + 1, y], nodes[x, y]);
             }

@@ -1,8 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WorldBuilder : MonoBehaviour {
+public class WorldBuilder : MonoBehaviour
+{
+    public bool isTwoDimensional = false;
+    public bool debug_canSpawnLights = true;
 
     public int width = 250;
     public int height = 250;
@@ -27,13 +31,13 @@ public class WorldBuilder : MonoBehaviour {
         generate();
     }
 
-    private void Update()
+   /* private void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
             generate();
         }
-    }
+    }*/
 
     void generate()
     {
@@ -89,27 +93,29 @@ public class WorldBuilder : MonoBehaviour {
         fungi.Clear();
 
         spawnPlayer();
-        populateLights();
+
+        if (debug_canSpawnLights)
+            populateLights();
     }
 
     void processRegions()
     {
+        List<Room> survingRooms = new List<Room>();
         rooms = getRegions(0);
 
-        for (int i = 0; i < rooms.Count; i++)
+        foreach (List<Coord> room in rooms)
         {
             //Debug.Log(room.Count);
-            if (rooms[i].Count < minRoomSize)
+            if (room.Count < minRoomSize)
             {
-                foreach (Coord tile in rooms[i])
+                foreach (Coord tile in room)
                 {
                     mapValues[tile.tileX, tile.tileY] = 1;
                 }
 
                 Debug.Log("room closed");
-                //rooms.RemoveAt(i);
-                //rooms.Remove(room);
             }
+
         }
 
         //reload rooms after removing all the small ones and sort by size
@@ -118,6 +124,209 @@ public class WorldBuilder : MonoBehaviour {
         {
             return regionOne.Count.CompareTo(regionTwo.Count);
         });
+
+        foreach (List<Coord> room in rooms)
+        {
+            survingRooms.Add(new Room(room, mapValues));
+        }
+
+        survingRooms.Sort();
+
+        survingRooms[0].isMainRoom = true;
+        survingRooms[0].isAccessibleFromMainRoom = true;
+        connectRooms(survingRooms);
+    }
+
+    void connectRooms(List<Room> allRooms, bool forceAccissibilityFromMainRoom = false)
+    {
+        List<Room> roomListA = new List<Room>();
+        List<Room> roomListB = new List<Room>();
+
+        if (forceAccissibilityFromMainRoom)
+        {
+            foreach (Room room in allRooms)
+            {
+                if (room.isAccessibleFromMainRoom)
+                {
+                    roomListB.Add(room);
+                }
+                else
+                {
+                    roomListA.Add(room);
+                }
+            }
+        } else
+        {
+            roomListA = allRooms;
+            roomListB = allRooms;
+        }
+
+        int bestDistance = 0;
+        Coord bestTileA = new Coord();
+        Coord bestTileB = new Coord();
+        Room bestRoomA = new Room();
+        Room bestRoomB = new Room();
+        bool possibleConnectionFound = false;
+
+        foreach (Room roomA in roomListA)
+        {
+            if (!forceAccissibilityFromMainRoom)
+            {
+                possibleConnectionFound = false;
+
+                if (roomA.connectedRooms.Count > 0)
+                {
+                    continue;
+                }
+            }
+
+            foreach (Room roomB in roomListB)
+            {
+                if (roomA == roomB || roomA.isConnected(roomB))
+                {
+                    continue;
+                }
+
+                /*if (roomA.isConnected(roomB))
+                {
+                    possibleConnectionFound = false;
+                    break;
+                }*/
+
+                
+
+                //loop through all rooms and find the shortest connection beween two rooms
+                for (int tileIndexA = 0; tileIndexA < roomA.edgeTiles.Count; tileIndexA++)
+                {
+                    for (int tileIndexB = 0; tileIndexB < roomB.edgeTiles.Count; tileIndexB++)
+                    {
+                        Coord tileA = roomA.edgeTiles[tileIndexA];
+                        Coord tileB = roomB.edgeTiles[tileIndexB];
+                        int distanceBetweenRooms = (int)(Mathf.Pow(tileA.tileX - tileB.tileX, 2) + Mathf.Pow(tileA.tileY - tileB.tileY, 2));
+
+                        if (distanceBetweenRooms < bestDistance || !possibleConnectionFound)
+                        {
+                            bestDistance = distanceBetweenRooms;
+                            possibleConnectionFound = true;
+                            bestTileA = tileA;
+                            bestTileB = tileB;
+                            bestRoomA = roomA;
+                            bestRoomB = roomB;
+                        }
+                    }
+                }
+            }
+
+            if (possibleConnectionFound && !forceAccissibilityFromMainRoom)
+            {
+                createPassage(bestRoomA, bestRoomB, bestTileA, bestTileB);
+            }
+        }
+
+        if (possibleConnectionFound && forceAccissibilityFromMainRoom)
+        {
+            createPassage(bestRoomA, bestRoomB, bestTileA, bestTileB);
+            connectRooms(allRooms, true);
+        }
+
+        if (!forceAccissibilityFromMainRoom)
+        {
+            connectRooms(allRooms, true);
+        }
+    }
+
+
+    void createPassage(Room roomA, Room roomB, Coord tileA, Coord tileB)
+    {
+        Room.connectRooms(roomA, roomB);
+        Debug.DrawLine(coordToWorldPoint(tileA), coordToWorldPoint(tileB), Color.green, 1000);
+
+        List<Coord> passage = getLine(tileA, tileB);
+        foreach (Coord tile in passage)
+        {
+            drawCircle(tile, 1);
+        }
+    }
+
+    //get all tiles in the radius of a tile and change them
+    void drawCircle(Coord c, int r)
+    {
+        for (int x = -r; x <= r; x++)
+        {
+            for (int y = -r; y <= r; y++)
+            {
+                int drawX = c.tileX + x;
+                int drawY = c.tileY + y;
+
+                if (isInMapRange(drawX, drawX))
+                {
+                    mapValues[drawX, drawY] = 0;
+                }
+            }
+        }
+    }
+
+    List<Coord> getLine(Coord from, Coord to)
+    {
+        List<Coord> line = new List<Coord>();
+        int x = from.tileX;
+        int y = from.tileY;
+
+        int dx = to.tileX - from.tileX;     //change in x
+        int dy = to.tileY - from.tileY;     //change in y
+
+        bool inverted = false;
+        int step = Math.Sign(dx);           //always increases by 1
+        int gradientStep = Math.Sign(dy);   //
+
+        int longest = Math.Abs(dx);
+        int shortest = Math.Abs(dy);
+
+        //if the change in y position is greater than the change in x
+        //invert the x and y values in the formula
+        if (longest < shortest)
+        {
+            inverted = true;
+            longest = Math.Abs(dy);
+            shortest = Math.Abs(dx);
+            step = Math.Sign(dy);
+            gradientStep = Math.Sign(dx);
+        }
+
+        int gradientAccumulation = longest / 2;
+
+        for (int i = 0; i < longest; i++)
+        {
+            line.Add(new Coord(x, y));
+
+            if (inverted)
+            {
+                y += step;
+            } else
+            {
+                x += step;
+            }
+
+            gradientAccumulation += shortest;
+            if (gradientAccumulation >= longest)
+            {
+                if (inverted)
+                {
+                    x += gradientStep;
+                } else
+                {
+                    y += gradientStep;
+                }
+                gradientAccumulation -= longest;
+            }
+        }
+
+        return line;
+    }
+
+    Vector3 coordToWorldPoint(Coord tile)
+    {
+        return new Vector3(-width / 2 + 0.5f + tile.tileX, -height / 2 + 0.5f + tile.tileY, 0);
     }
 
     List<List<Coord>> getRegions(int tileType)
@@ -182,7 +391,7 @@ public class WorldBuilder : MonoBehaviour {
         return tiles;
     }
 
-    bool isInMapRange(int x, int y)
+    public bool isInMapRange(int x, int y)
     {
         return x >= 0 && x < width && y >= 0 && y < height;
     }
@@ -192,6 +401,10 @@ public class WorldBuilder : MonoBehaviour {
     {
         List<Coord> playerRoom = rooms[0];
         List<Coord> playerSpawnPlaces = new List<Coord>();
+        int spawnZ = 0;
+
+        if (!isTwoDimensional)
+            spawnZ = 2;
 
         foreach (Coord tile in playerRoom)
         {
@@ -216,11 +429,12 @@ public class WorldBuilder : MonoBehaviour {
             }
         }
 
-        Coord playerSpawnLoc = playerSpawnPlaces[Random.Range(0, playerSpawnPlaces.Count)];
+        Coord playerSpawnLoc = playerSpawnPlaces[UnityEngine.Random.Range(0, playerSpawnPlaces.Count)];
         //add pos to -dimension / 2 to get accurate placement 
-        GameObject playerInst = Instantiate(player, new Vector3((-width / 2) + playerSpawnLoc.tileX, 
-            (-height / 2) + playerSpawnLoc.tileY, 2), 
-            Quaternion.identity);
+        /*GameObject playerInst = Instantiate(player, new Vector3((-width / 2) + playerSpawnLoc.tileX, 
+            (-height / 2) + playerSpawnLoc.tileY, spawnZ), 
+            Quaternion.identity);*/
+        GameObject playerInst = Instantiate(player, coordToWorldPoint(playerSpawnLoc), Quaternion.identity);
         Camera.main.GetComponent<CameraFollow>().target = playerInst.transform;
     }
 
@@ -244,6 +458,8 @@ public class WorldBuilder : MonoBehaviour {
                             if (neighborTiles[1, 2] == 1)
                             {
                                 lightSpawnPlaces.Add(tile);
+                                //GameObject fungusInst = Instantiate(fungus, coordToWorldPoint(tile), Quaternion.identity);
+                                //fungi.Add(fungusInst);
                             }
                         }
                     }
@@ -251,10 +467,9 @@ public class WorldBuilder : MonoBehaviour {
             }
         }
 
-        for (int i = 0; i < lightSpawnPlaces.Count; i += 25)
+        for (int i = 0; i < lightSpawnPlaces.Count; i += 15)
         {
-            GameObject fungusInst = Instantiate(fungus, new Vector3((-width / 2) + lightSpawnPlaces[i].tileX,
-                (-height / 2) + lightSpawnPlaces[i].tileY + 0.5f, 2), Quaternion.identity);
+            GameObject fungusInst = Instantiate(fungus, coordToWorldPoint(lightSpawnPlaces[i]), Quaternion.identity);
             fungi.Add(fungusInst);
         }
     }
@@ -329,6 +544,8 @@ public class WorldBuilder : MonoBehaviour {
         return surroundingTiles;
     }
 
+
+    //hold map point coordinates
     struct Coord
     {
         public int tileX;
@@ -341,9 +558,94 @@ public class WorldBuilder : MonoBehaviour {
         }
     }
 
-    private void OnDrawGizmos()
+    //storage class for open areas aka rooms
+    class Room : IComparable<Room>
     {
-        /*if (mapValues != null)
+        public List<Coord> tiles;
+        public List<Coord> edgeTiles;
+        public List<Room> connectedRooms;
+        public int roomSize;
+        public bool isAccessibleFromMainRoom;
+        public bool isMainRoom;
+
+        //empty constructor
+        public Room() { }
+
+        public Room(List<Coord> roomTiles, int[,] map)
+        {
+            tiles = roomTiles;
+            roomSize = tiles.Count;
+            connectedRooms = new List<Room>();
+            edgeTiles = new List<Coord>();
+
+            foreach (Coord tile in tiles)
+            {
+                for (int x = tile.tileX - 1; x <= tile.tileX + 1; x++)
+                {
+                    for (int y = tile.tileY - 1; y <= tile.tileY + 1; y++)
+                    {
+                        if (x == tile.tileX || y == tile.tileY)
+                        {
+                            try
+                            {
+                                if (map[x, y] == 1)
+                                {
+                                    edgeTiles.Add(tile);
+                                }
+                            }
+                            catch (System.IndexOutOfRangeException e)
+                            {
+                                Debug.Log("Edge tile assignment failed at "+ x + ", " + y);
+                                //break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //update this room, and have it check all the other rooms
+        public void setAccessibleFromMainRoom ()
+        {
+            if (!isAccessibleFromMainRoom)
+            {
+                isAccessibleFromMainRoom = true;
+                foreach (Room room in connectedRooms)
+                {
+                    room.setAccessibleFromMainRoom();
+                }
+            }
+        }
+
+        public static void connectRooms(Room roomA, Room roomB)
+        {
+            if (roomA.isAccessibleFromMainRoom)
+            {
+                roomB.setAccessibleFromMainRoom();
+            }
+            else if (roomB.isAccessibleFromMainRoom)
+            {
+                roomA.setAccessibleFromMainRoom(); 
+            }
+
+            roomA.connectedRooms.Add(roomB);
+            roomB.connectedRooms.Add(roomA);
+        }
+
+        public bool isConnected(Room otherRoom)
+        {
+            return connectedRooms.Contains(otherRoom);
+        }
+
+        public int CompareTo(Room otherRoom)
+        {
+            return otherRoom.roomSize.CompareTo(roomSize);
+        }
+    }
+
+    /*private void OnDrawGizmos()
+    {
+        if (mapValues != null)
         {   
             List<List<Coord>> rooms = getRegions(0);
             rooms.Sort(delegate(List<Coord> regionOne, List<Coord> regionTwo)
@@ -391,6 +693,6 @@ public class WorldBuilder : MonoBehaviour {
                     Gizmos.DrawCube(pos, Vector3.one * 0.5f);
                 }
             }
-        }*/
-    }
+        }
+    }*/
 }
