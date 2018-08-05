@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class WorldBuilder : MonoBehaviour
 {
-    public bool isTwoDimensional = false;
+    public bool is2D = false;
     public bool debug_canSpawnLights = true;
 
     public int width = 250;
@@ -401,10 +402,6 @@ public class WorldBuilder : MonoBehaviour
     {
         List<Coord> playerRoom = rooms[0];
         List<Coord> playerSpawnPlaces = new List<Coord>();
-        int spawnZ = 0;
-
-        if (!isTwoDimensional)
-            spawnZ = 2;
 
         foreach (Coord tile in playerRoom)
         {
@@ -544,6 +541,8 @@ public class WorldBuilder : MonoBehaviour
         return surroundingTiles;
     }
 
+    
+
 
     //hold map point coordinates
     struct Coord
@@ -567,6 +566,7 @@ public class WorldBuilder : MonoBehaviour
         public int roomSize;
         public bool isAccessibleFromMainRoom;
         public bool isMainRoom;
+        public Coord average;
 
         //empty constructor
         public Room() { }
@@ -578,6 +578,7 @@ public class WorldBuilder : MonoBehaviour
             connectedRooms = new List<Room>();
             edgeTiles = new List<Coord>();
 
+            //find all edge tiles in the room
             foreach (Coord tile in tiles)
             {
                 for (int x = tile.tileX - 1; x <= tile.tileX + 1; x++)
@@ -602,6 +603,9 @@ public class WorldBuilder : MonoBehaviour
                     }
                 }
             }
+
+            average = Room.getAverageCoord(tiles);
+            //print(average.tileX+", "+average.tileY);
         }
 
         //update this room, and have it check all the other rooms
@@ -630,6 +634,24 @@ public class WorldBuilder : MonoBehaviour
 
             roomA.connectedRooms.Add(roomB);
             roomB.connectedRooms.Add(roomA);
+        }
+
+        public static Coord getAverageCoord(List<Coord> tiles)
+        {
+            Coord average;
+            average.tileX = 0;
+            average.tileY = 0;
+
+            foreach (Coord tile in tiles)
+            {
+                average.tileX += tile.tileX;
+                average.tileY += tile.tileY;
+            }
+
+            average.tileX = average.tileX / tiles.Count;
+            average.tileY = average.tileY / tiles.Count;
+
+            return average;
         }
 
         public bool isConnected(Room otherRoom)

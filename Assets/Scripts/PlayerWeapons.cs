@@ -4,11 +4,15 @@ using UnityEngine;
 
 public class PlayerWeapons : MonoBehaviour {
 
+    public bool is2D = false;
+
     public Grapple grapple;
     public KeyCode breakKey;
 
     private Grapple grappleInst;
     private PlayerMovement playerMovement;
+
+    private Vector3 mousePos, dir;
 
     private void Awake()
     {
@@ -27,10 +31,18 @@ public class PlayerWeapons : MonoBehaviour {
                 Destroy(grappleInst.gameObject);
             }
 
-            //Debug.Log(Input.mousePosition + ", " + GetWorldPositionOnPlane(Input.mousePosition, 0));
-            Vector3 mousePos = GetWorldPositionOnPlane(Input.mousePosition, 0);
-            Vector3 dir = mousePos - transform.position;
-            dir.z = 0; //zero out depth just to make sure
+            if (!is2D) {
+                //Debug.Log(Input.mousePosition + ", " + GetWorldPositionOnPlane(Input.mousePosition, 0));
+                mousePos = GetWorldPositionOnPlane(Input.mousePosition, 0);
+                dir = mousePos - transform.position;
+                dir.z = 0; //zero out depth just to make sure
+            } else
+            {
+                mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                dir = mousePos - transform.position;
+                dir.z = 0; //zero out depth just to make sure
+            }
+            
 
             grappleInst = Instantiate(grapple, transform.position, Quaternion.identity) as Grapple;
             grappleInst.holder = transform;

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public bool isTwoDimensional = false;
+    public bool is2D = false;
 
     public bool canMove = true;
     public bool canJump;
@@ -12,28 +12,29 @@ public class PlayerMovement : MonoBehaviour
     public KeyCode moveLeft = KeyCode.A;
     public KeyCode moveRight = KeyCode.D;
     public KeyCode jump = KeyCode.W;
+    public LayerMask playerMask;
 
     public Vector3 vel;
     public float moveSpeed = 5;
     public float jumpForce = 5f;
     public float fallMultiplier = 3f;
     Rigidbody rigid;
-    Rigidbody2D rigidTwo;
+    Rigidbody2D rigid2D;
 
     float xMove = 0;
     RaycastHit hit;
 
     // Use this for initialization
     void Awake () {
-        if (!isTwoDimensional)
+        if (!is2D)
         {
             rigid = GetComponent<Rigidbody>();
             rigid.velocity = Vector3.zero;
         }
         else
         {
-            rigidTwo = GetComponent<Rigidbody2D>();
-            rigidTwo.velocity = Vector3.zero;
+            rigid2D = GetComponent<Rigidbody2D>();
+            rigid2D.velocity = Vector3.zero;
         }
 	}
 	
@@ -42,10 +43,10 @@ public class PlayerMovement : MonoBehaviour
     {
         if (canMove)
         {
-            if (!isTwoDimensional)
+            if (!is2D)
                 vel = rigid.velocity;
             else
-                vel = rigidTwo.velocity;
+                vel = rigid2D.velocity;
 
             if (Input.GetKey(moveRight))
             {
@@ -62,47 +63,81 @@ public class PlayerMovement : MonoBehaviour
 
             vel.x = xMove * moveSpeed;
 
-            if (Physics.Raycast(transform.position, Vector3.down, out hit, 1f))
+            if (!is2D)
             {
-                if (hit.collider.CompareTag("Environment"))
+                if (Physics.Raycast(transform.position, Vector3.down, out hit, 1f))
                 {
-                    canJump = true;
-                    if (Input.GetKeyDown(KeyCode.W))
+                    if (hit.collider.CompareTag("Environment"))
                     {
-                        vel.y = jumpForce;
+                        canJump = true;
+                        if (Input.GetKeyDown(KeyCode.W))
+                        {
+                            vel.y = jumpForce;
+                        }
                     }
-                } else
+                    else
+                    {
+                        canJump = false;
+                    }
+                }
+                else
                 {
                     canJump = false;
                 }
             }
             else
             {
-                canJump = false;
+                RaycastHit2D hit2D = Physics2D.Raycast(transform.position, Vector3.down, 1.5f, 1 << playerMask);
+
+                if (hit2D.collider)
+                {
+                    if (hit2D.collider.CompareTag("Environment"))
+                    {
+                        canJump = true;
+
+                        if (Input.GetKeyDown(KeyCode.W))
+                        {
+                            vel.y = jumpForce;
+                        }
+                    }
+                    else
+                    {
+                        canJump = false;
+                    }
+                }
+                else
+                {
+                    canJump = false;
+                }
             }
 
-            if (!isTwoDimensional)
+            if (!is2D)
                 rigid.velocity = vel;
             else
-                rigidTwo.velocity = vel;
+                rigid2D.velocity = vel;
         }
 	}
 
     //code to make the player fall faster
     private void FixedUpdate()
     {
-        if (!isTwoDimensional)
+        if (!is2D)
         {
             if (rigid.velocity.y < 0)
             {
                 rigid.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime; //-1 to account for physics system's normal gravity
+                
             }
         }
         else
         {
-            if (rigidTwo.velocity.y < 0)
+            if (rigid2D.velocity.y < 0)
             {
-                rigidTwo.velocity += Vector2.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime; //-1 to account for physics system's normal gravity
+                //rigidTwo.velocity += Vector2.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime; //-1 to account for physics system's normal gravity
+                rigid2D.gravityScale = fallMultiplier;
+            } else
+            {
+                rigid2D.gravityScale = 1;
             }
         }
     }

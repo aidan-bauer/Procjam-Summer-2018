@@ -6,7 +6,7 @@ using UnityEngine;
 public class MeshGenerator : MonoBehaviour
 {
 
-    public bool isTwoDimensional = false;
+    public bool is2D = false;
 
     public SquareGrid squareGrid;
     public MeshFilter walls;
@@ -17,7 +17,7 @@ public class MeshGenerator : MonoBehaviour
     List<Vector2> uv;
     List<Vector3> normals;
     List<int> triangles;
-
+    
     Dictionary<int, List<Triangle>> triangleDictionary = new Dictionary<int, List<Triangle>>();
     List<List<int>> outlines = new List<List<int>>();
     HashSet<int> checkedVertices = new HashSet<int>();
@@ -30,7 +30,6 @@ public class MeshGenerator : MonoBehaviour
         triangleDictionary.Clear();
         outlines.Clear();
         checkedVertices.Clear();
-
         //create the list of nodes
         squareGrid = new SquareGrid(map, squareSize);
 
@@ -58,7 +57,7 @@ public class MeshGenerator : MonoBehaviour
 
         //Debug.Log(vertices.Count);
 
-        if (!isTwoDimensional)
+        if (!is2D)
         {
             meshCollider = GetComponent<MeshCollider>();
             meshCollider.sharedMesh = mesh;
@@ -68,7 +67,7 @@ public class MeshGenerator : MonoBehaviour
         mesh.triangles = triangles.ToArray();
         mesh.RecalculateNormals();
 
-        if (!isTwoDimensional)
+        if (!is2D)
         {
             CreateWallMesh();
         }

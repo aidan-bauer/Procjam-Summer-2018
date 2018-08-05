@@ -4,14 +4,19 @@ using UnityEngine;
 
 public class Grapple : MonoBehaviour {
 
+    public bool is2D = false;
+
     public Transform holder;    //the player or NPC who's holding the grappling hook
     public float speed;
     public float airTime = 2f;  //how long the grapple can be in the air before it's destroyed
     private bool inAir = false;
 
     private Rigidbody rigid;
+    private Rigidbody2D rigid2D;
     private Rigidbody holderRigid;
+    private Rigidbody2D holderRigid2D;
     private HingeJoint grabHinge;
+    private HingeJoint2D grabHinge2D;
     private LineRenderer lineRend;
     [HideInInspector]public PlayerMovement playerMovement;
 
@@ -20,6 +25,7 @@ public class Grapple : MonoBehaviour {
     // Use this for initialization
     void Awake () {
         rigid = GetComponent<Rigidbody>();
+        rigid2D = GetComponent<Rigidbody2D>();
         lineRend = GetComponent<LineRenderer>();
 	}
 	
@@ -32,7 +38,11 @@ public class Grapple : MonoBehaviour {
     public void launchGrapple(Vector3 launchAngle)
     {
         //launchAngle.Normalize();
-        rigid.velocity = launchAngle * speed;
+        if (!is2D)
+            rigid.velocity = launchAngle * speed;
+        else
+            rigid2D.velocity = launchAngle * speed;
+
         inAir = true;
         selfDestruct = DestoryInTime(airTime);
         StartCoroutine(selfDestruct);
@@ -40,9 +50,19 @@ public class Grapple : MonoBehaviour {
 
     public void breakGrapple()
     {
-        grabHinge.connectedBody = null;
-        Destroy(grabHinge);
-        holderRigid.isKinematic = false;  //allow player to move again
+        if (!is2D)
+        {
+            grabHinge.connectedBody = null;
+            Destroy(grabHinge);
+            holderRigid.isKinematic = false;  //allow player to move again
+        } else
+        {
+            grabHinge2D.connectedBody = null;
+            Destroy(grabHinge2D);
+            //holderRigid2D.isKinematic = false;  //allow player to move again
+            holderRigid2D.bodyType = RigidbodyType2D.Dynamic;
+        }
+        
         playerMovement.canMove = true;
     }
 
@@ -63,6 +83,23 @@ public class Grapple : MonoBehaviour {
         }
     }
 
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.collider.CompareTag("Environment"))
+        {
+            if (inAir)
+            {
+                StopCoroutine(selfDestruct);
+                StartCoroutine("MoveTowardsHook");
+                rigid2D.velocity = Vector3.zero;
+                grabHinge2D = gameObject.AddComponent<HingeJoint2D>();
+                grabHinge2D.connectedBody = collision.rigidbody;
+
+                inAir = false;
+            }
+        }
+    }
+
     public IEnumerator DestoryInTime(float delay)
     {
         playerMovement.canMove = true;
@@ -73,8 +110,17 @@ public class Grapple : MonoBehaviour {
     public IEnumerator MoveTowardsHook()
     {
         //Debug.Log("moving");
-        holderRigid = holder.GetComponent<Rigidbody>();
-        holderRigid.isKinematic = true;
+        if (!is2D)
+        {
+            holderRigid = holder.GetComponent<Rigidbody>();
+            holderRigid.isKinematic = true;
+        } else
+        {
+            holderRigid2D = holder.GetComponent<Rigidbody2D>();
+            //holderRigid2D.isKinematic = true;
+            holderRigid2D.bodyType = RigidbodyType2D.Static;
+        }
+
         playerMovement.canMove = false;
         Vector3 dist = holder.position - transform.position;
 

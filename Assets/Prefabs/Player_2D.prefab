@@ -136,7 +136,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!70 &70859648484205988
 CapsuleCollider2D:
   m_ObjectHideFlags: 1
@@ -199,7 +199,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d33ef73d5e181947be38250e9796f3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  grapple: {fileID: 114671709847661942, guid: bb6d9afdcedd7ad4f8a4cba29e5f55df, type: 2}
+  is2D: 1
+  grapple: {fileID: 114671709847661942, guid: 100d51e2a45570d4e81b968c44d3d64b, type: 2}
   breakKey: 115
 --- !u!114 &114753388441873490
 MonoBehaviour:
@@ -212,7 +213,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c426941dc7573ba44b48391a9217d31a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isTwoDimensional: 1
+  is2D: 1
   canMove: 1
   canJump: 0
   moveLeft: 97
